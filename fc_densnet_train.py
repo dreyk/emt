@@ -35,6 +35,7 @@ def train(args):
                 with file_writer.as_default():
                     tf.summary.scalar("Loss",loss_value,step=step)
                     tf.summary.image("Src", x_batch_train, step=step,max_outputs=3)
+                    tf.summary.image("Original", y_batch_train, step=step, max_outputs=3)
                     tf.summary.image("Results", alpha, step=step, max_outputs=3)
                     tf.summary.image("Features-0", outputs[1][:,:,:,0:1], step=step, max_outputs=1)
                     tf.summary.image("Features-1", outputs[1][:, :, :, 1:2], step=step, max_outputs=1)
