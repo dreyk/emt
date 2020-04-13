@@ -37,8 +37,6 @@ def create_arg_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     checkpoint_dir = args.checkpoint_dir
-    logging.getLogger().setLevel('INFO')
-    tf.logging.set_verbosity(tf.logging.INFO)
     parser.add_argument('--batch-size', default=16, type=int, help='Mini batch size')
     parser.add_argument('--num-epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--resolution', default=160, type=int, help='Resolution of images')
