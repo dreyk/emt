@@ -8,45 +8,47 @@ import argparse
 import shutil
 
 
-
 def train(args):
     logdir = args.checkpoint_dir
     os.makedirs(logdir)
     file_writer = tf.summary.create_file_writer(logdir)
-    #images_file_writer = tf.summary.create_file_writer(logdir + "/images")
+    # images_file_writer = tf.summary.create_file_writer(logdir + "/images")
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
-    ds = alpha_base.data_fn(args,True)
-    model = fc_densenet.FCDensNet(input_shape=(160,160,3))
-    #model.compile(
+    ds = alpha_base.data_fn(args, True)
+    model = fc_densenet.FCDensNet(input_shape=(160, 160, 3))
+    # model.compile(
     #    loss=tf.keras.losses.MeanAbsoluteError(),  # keras.losses.mean_squared_error
     #    optimizer=keras.optimizers.Adam(),
-    #)
+    # )
     model.summary()
 
     loss_fn = tf.keras.losses.MeanAbsoluteError()
     optimizer = tf.keras.optimizers.Adam()
-    for step, (x_batch_train, y_batch_train) in enumerate(ds):
-        with tf.GradientTape() as tape:
-            outputs = model(x_batch_train, training=True)  # Logits for this minibatch
-            alpha = outputs[0]
-            loss_value = loss_fn(y_batch_train, alpha)
-            if step % 50 == 0:
-                logging.info("Step {}: Loss={}".format(step,loss_value))
-                with file_writer.as_default():
-                    tf.summary.scalar("Loss",loss_value,step=step)
-                    tf.summary.image("Src", x_batch_train, step=step,max_outputs=3)
-                    tf.summary.image("Original", y_batch_train, step=step, max_outputs=3)
-                    tf.summary.image("Results", alpha, step=step, max_outputs=3)
-                    tf.summary.image("Features-0", outputs[1][:,:,:,0:1], step=step, max_outputs=1)
-                    tf.summary.image("Features-1", outputs[1][:, :, :, 1:2], step=step, max_outputs=1)
-                    tf.summary.image("Features-3", outputs[1][:, :, :, 2:3], step=step, max_outputs=1)
-                    for i in range(len(outputs)-2):
-                        tf.summary.image(f"Feature0-{i}",outputs[i+2][:,:,:,0:1], step=step, max_outputs=1)
-                        tf.summary.image(f"Feature2-{i}", outputs[i + 2][:, :, :, 1:2], step=step, max_outputs=1)
-                        tf.summary.image(f"Feature3-{i}", outputs[i + 2][:, :, :, 2:3], step=step, max_outputs=1)
+    step = 0
+    for e in range(args.num_epochs):
+        for (x_batch_train, y_batch_train) in ds:
+            with tf.GradientTape() as tape:
+                outputs = model(x_batch_train, training=True)  # Logits for this minibatch
+                alpha = outputs[0]
+                loss_value = loss_fn(y_batch_train, alpha)
+                if step % 50 == 0:
+                    logging.info("Step {}: Loss={}".format(step, loss_value))
+                    with file_writer.as_default():
+                        tf.summary.scalar("Loss", loss_value, step=step)
+                        tf.summary.image("Src", x_batch_train, step=step, max_outputs=3)
+                        tf.summary.image("Original", y_batch_train, step=step, max_outputs=3)
+                        tf.summary.image("Results", alpha, step=step, max_outputs=3)
+                        tf.summary.image("Features-0", outputs[1][:, :, :, 0:1], step=step, max_outputs=1)
+                        tf.summary.image("Features-1", outputs[1][:, :, :, 1:2], step=step, max_outputs=1)
+                        tf.summary.image("Features-3", outputs[1][:, :, :, 2:3], step=step, max_outputs=1)
+                        for i in range(len(outputs) - 2):
+                            tf.summary.image(f"Feature0-{i}", outputs[i + 2][:, :, :, 0:1], step=step, max_outputs=1)
+                            tf.summary.image(f"Feature2-{i}", outputs[i + 2][:, :, :, 1:2], step=step, max_outputs=1)
+                            tf.summary.image(f"Feature3-{i}", outputs[i + 2][:, :, :, 2:3], step=step, max_outputs=1)
 
-        grads = tape.gradient(loss_value, model.trainable_weights)
-        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+            grads = tape.gradient(loss_value, model.trainable_weights)
+            optimizer.apply_gradients(zip(grads, model.trainable_weights))
+            step += 1
 
 
 def create_arg_parser():
@@ -71,6 +73,8 @@ def create_arg_parser():
                         help='Path to the dataset')
 
     return parser
+
+
 if __name__ == '__main__':
     logging.getLogger().setLevel('INFO')
     args = create_arg_parser().parse_args()
