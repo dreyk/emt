@@ -18,10 +18,10 @@ def data_fn(args, training):
     ds = tf.data.Dataset.from_tensor_slices(files)
 
     def _read_images(a):
-        img = tf.read_file(a[0])
-        img = tf.image.decode_image(img)
-        mask = tf.read_file(a[1])
-        mask = tf.image.decode_image(mask)
+        img = tf.io.read_file(a[0])
+        img = tf.io.decode_image(img)
+        mask = tf.io.read_file(a[1])
+        mask = tf.io.decode_image(mask)
         img = tf.expand_dims(img, 0)
         mask = tf.expand_dims(mask, 0)
         img = tf.image.resize_bilinear(img, [resolution, resolution])
