@@ -7,20 +7,42 @@ import os
 import argparse
 import shutil
 
+
+
 def train(args):
     logdir = args.checkpoint_dir
     os.makedirs(logdir)
-    file_writer = tf.summary.create_file_writer(logdir + "/metrics")
-    file_writer.set_as_default()
+    file_writer = tf.summary.create_file_writer(logdir)
+    #images_file_writer = tf.summary.create_file_writer(logdir + "/images")
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
     ds = alpha_base.data_fn(args,True)
-    model = fc_densenet.FCDensNet()
-    model.compile(
-        loss=tf.keras.losses.MeanAbsoluteError(),  # keras.losses.mean_squared_error
-        optimizer=keras.optimizers.Adam(),
-    )
+    model = fc_densenet.FCDensNet(input_shape=(160,160,3))
+    #model.compile(
+    #    loss=tf.keras.losses.MeanAbsoluteError(),  # keras.losses.mean_squared_error
+    #    optimizer=keras.optimizers.Adam(),
+    #)
     model.summary()
-    training_history = model.fit(ds,epochs=args.num_epochs,callbacks=[tensorboard_callback])
+
+    loss_fn = tf.keras.losses.MeanAbsoluteError()
+    optimizer = tf.keras.optimizers.Adam()
+    for step, (x_batch_train, y_batch_train) in enumerate(ds):
+        with tf.GradientTape() as tape:
+            outputs = model(x_batch_train, training=True)  # Logits for this minibatch
+            alpha = outputs[0]
+            loss_value = loss_fn(y_batch_train, alpha)
+            if step % 50 == 0:
+                logging.info("Step {}: Loss={}".format(step,loss_value))
+                with file_writer.as_default():
+                    tf.summary.scalar("Loss",loss_value,step=step)
+                    tf.summary.image("Src", x_batch_train, step=step,max_outputs=3)
+                    tf.summary.image("Results", alpha, step=step, max_outputs=3)
+                    tf.summary.image("Features", outputs[1][:,:,:,0:1], step=step, max_outputs=1)
+                    for i in range(len(outputs)-2):
+                        tf.summary.image(f"Feature-{i}",outputs[i+2][:,:,:,0:1], step=step, max_outputs=1)
+
+        grads = tape.gradient(loss_value, model.trainable_weights)
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+
 
 def create_arg_parser():
     conf_parser = argparse.ArgumentParser(
@@ -37,7 +59,7 @@ def create_arg_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     checkpoint_dir = args.checkpoint_dir
-    parser.add_argument('--batch-size', default=16, type=int, help='Mini batch size')
+    parser.add_argument('--batch-size', default=4, type=int, help='Mini batch size')
     parser.add_argument('--num-epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--resolution', default=160, type=int, help='Resolution of images')
     parser.add_argument('--data_set', type=str, required=True,

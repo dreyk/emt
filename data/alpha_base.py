@@ -13,19 +13,19 @@ def data_fn(args, training):
         img = data_set + '/images/' + img
         files[i] = [img, mask]
     resolution = args.resolution
-    logging.info('Number of Files: {}'.format(files))
+    logging.info('Number of Files: {}'.format(len(files)))
 
     ds = tf.data.Dataset.from_tensor_slices(files)
 
     def _read_images(a):
         img = tf.io.read_file(a[0])
-        img = tf.io.decode_image(img)
+        img = tf.io.decode_image(img,expand_animations = False)
         mask = tf.io.read_file(a[1])
-        mask = tf.io.decode_image(mask)
+        mask = tf.io.decode_image(mask,expand_animations = False)
         img = tf.expand_dims(img, 0)
         mask = tf.expand_dims(mask, 0)
-        img = tf.image.resize_bilinear(img, [resolution, resolution])
-        mask = tf.image.resize_bilinear(mask, [resolution, resolution])
+        img = tf.image.resize(img, [resolution, resolution])
+        mask = tf.image.resize(mask, [resolution, resolution])
         logging.info('img: {}'.format(img.shape))
         logging.info('mask: {}'.format(mask.shape))
         img = tf.reshape(img, [resolution, resolution, 3])

@@ -1,7 +1,6 @@
 import models.fc_densenet.layers as fc_layers
-from tensorflow.keras import layers
-from tensorflow.keras import Model
 import tensorflow as tf
+
 
 def FCDensNet(
         input_shape=(None, None, 3),
@@ -22,9 +21,8 @@ def FCDensNet(
     #####################
     # First Convolution #
     #####################
-    inputs = layers.Input(shape=input_shape)
-    tf.summary.image('src',inputs, max_outputs=3)
-    stack = layers.Conv2D(filters=n_filters_first_conv, kernel_size=3, padding='same', kernel_initializer='he_uniform')(inputs)
+    inputs = tf.keras.layers.Input(shape=input_shape,name='input')
+    stack = tf.keras.layers.Conv2D(filters=n_filters_first_conv, kernel_size=3, padding='same', kernel_initializer='he_uniform')(inputs)
     n_filters = n_filters_first_conv
 
     #####################
@@ -35,12 +33,8 @@ def FCDensNet(
     for i in range(n_pool):
         for j in range(n_layers_per_block[i]):
             l = fc_layers.BN_ReLU_Conv(stack, growth_rate, dropout_p=dropout_p)
-            stack = layers.concatenate([stack, l])
+            stack = tf.keras.layers.concatenate([stack, l])
             n_filters += growth_rate
-
-        tf.summary.image(f'pool_0_{i}',stack[:,:, :, 0:1],max_outputs=1)
-        tf.summary.image(f'pool_1_{i}', stack[:, :, :, 1:2], max_outputs=1)
-        tf.summary.image(f'pool_2_{i}', stack[:, :, :, 2:3], max_outputs=1)
         skip_connection_list.append(stack)
         stack = fc_layers.TransitionDown(stack, n_filters, dropout_p)
     skip_connection_list = skip_connection_list[::-1]
@@ -53,8 +47,8 @@ def FCDensNet(
     for j in range(n_layers_per_block[n_pool]):
         l = fc_layers.BN_ReLU_Conv(stack, growth_rate, dropout_p=dropout_p)
         block_to_upsample.append(l)
-        stack = layers.concatenate([stack, l])
-    block_to_upsample = layers.concatenate(block_to_upsample)
+        stack = tf.keras.layers.concatenate([stack, l])
+    block_to_upsample = tf.keras.layers.concatenate(block_to_upsample)
 
     #####################
     #  Upsampling path  #
@@ -67,16 +61,16 @@ def FCDensNet(
         for j in range(n_layers_per_block[n_pool + i + 1]):
             l = fc_layers.BN_ReLU_Conv(stack, growth_rate, dropout_p=dropout_p)
             block_to_upsample.append(l)
-            stack = layers.concatenate([stack, l])
-        tf.summary.image(f'upsample_0_{i}', stack[:,:, :, 0:1], max_outputs=1)
-        tf.summary.image(f'upsample_1_{i}', stack[:,:, :, 1:2], max_outputs=1)
-        tf.summary.image(f'upsample_2_{i}', stack[:,:, :, 2:3], max_outputs=1)
-        block_to_upsample = layers.concatenate(block_to_upsample)
+            stack = tf.keras.layers.concatenate([stack, l])
+        block_to_upsample = tf.keras.layers.concatenate(block_to_upsample)
 
     #####################
     #  Softmax          #
     #####################
     output = fc_layers.SoftmaxLayer(stack, n_classes)
-    tf.summary.image('result', output, max_outputs=3)
-    model =  Model(inputs=inputs, outputs=output)
+    outputs = [output,stack]
+    for sc in skip_connection_list:
+        outputs.append(sc)
+
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model

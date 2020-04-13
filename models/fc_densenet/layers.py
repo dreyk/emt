@@ -1,5 +1,5 @@
 from tensorflow.keras import layers
-
+import tensorflow as tf
 
 def BN_ReLU_Conv(inputs, n_filters, filter_size=3, dropout_p=0.2):
     '''Apply successivly BatchNormalization, ReLu nonlinearity, Convolution and Dropout (if dropout_p > 0)'''
