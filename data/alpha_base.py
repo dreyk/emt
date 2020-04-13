@@ -32,8 +32,7 @@ def data_fn(args, training):
         mask = tf.reshape(mask[:, :, :, 0], [resolution, resolution, 1])
         img = tf.cast(img, dtype=tf.float32) / 255
         mask = tf.cast(mask, dtype=tf.float32) / 255
-        weight = tf.ones_like(mask, dtype=tf.float32)
-        return img, tf.concat([mask, weight], axis=2)
+        return img, mask
 
     ds = ds.map(_read_images)
     if training:

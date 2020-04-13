@@ -30,5 +30,4 @@ def SoftmaxLayer(inputs, n_classes):
     The output will have the shape (batch_size  * n_rows * n_cols, n_classes)
     """
     l = layers.Conv2D(n_classes, kernel_size=1, padding='same', kernel_initializer='he_uniform')(inputs)
-    l = layers.Activation('sigmoid')(l)#or softmax for multi-class
-    return l
+    return layers.Activation('sigmoid')(l)#or softmax for multi-class
