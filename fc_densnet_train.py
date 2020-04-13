@@ -36,9 +36,13 @@ def train(args):
                     tf.summary.scalar("Loss",loss_value,step=step)
                     tf.summary.image("Src", x_batch_train, step=step,max_outputs=3)
                     tf.summary.image("Results", alpha, step=step, max_outputs=3)
-                    tf.summary.image("Features", outputs[1][:,:,:,0:1], step=step, max_outputs=1)
+                    tf.summary.image("Features-0", outputs[1][:,:,:,0:1], step=step, max_outputs=1)
+                    tf.summary.image("Features-1", outputs[1][:, :, :, 1:2], step=step, max_outputs=1)
+                    tf.summary.image("Features-3", outputs[1][:, :, :, 2:3], step=step, max_outputs=1)
                     for i in range(len(outputs)-2):
-                        tf.summary.image(f"Feature-{i}",outputs[i+2][:,:,:,0:1], step=step, max_outputs=1)
+                        tf.summary.image(f"Feature0-{i}",outputs[i+2][:,:,:,0:1], step=step, max_outputs=1)
+                        tf.summary.image(f"Feature2-{i}", outputs[i + 2][:, :, :, 1:2], step=step, max_outputs=1)
+                        tf.summary.image(f"Feature3-{i}", outputs[i + 2][:, :, :, 2:3], step=step, max_outputs=1)
 
         grads = tape.gradient(loss_value, model.trainable_weights)
         optimizer.apply_gradients(zip(grads, model.trainable_weights))
