@@ -10,6 +10,8 @@ import shutil
 def train(args):
     logdir = args.checkpoint_dir
     os.makedirs(logdir)
+    file_writer = tf.summary.create_file_writer(logdir + "/metrics")
+    file_writer.set_as_default()
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir)
     ds = alpha_base.data_fn(args,True)
     model = fc_densenet.FCDensNet()
