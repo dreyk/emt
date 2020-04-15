@@ -98,6 +98,11 @@ def _resize_and_put(img, x_shift, y_shift, iw, ih, w, h):
 
 def augumnted_data_fn(args, training):
     import albumentations
+    def _soft_strong_aug(p=0.5):
+        return albumentations.Compose([
+            albumentations.HorizontalFlip(),
+            albumentations.VerticalFlip(),
+        ], p=p)
     def _strong_aug(p=0.5):
         return albumentations.Compose([
             albumentations.HorizontalFlip(),
@@ -119,7 +124,7 @@ def augumnted_data_fn(args, training):
             albumentations.HueSaturationValue(p=0.3),
         ], p=p)
 
-    augmentation = _strong_aug(p=0.9)
+    augmentation = _soft_strong_aug(p=0.9)
     files = glob.glob(args.data_set + '/masks/*.*')
     for i in range(len(files)):
         mask = files[i]
