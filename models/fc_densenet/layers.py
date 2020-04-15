@@ -185,12 +185,7 @@ def BN_ReLU_Conv(inputs, n_filters, filter_size=3, dropout_p=0.2):
     '''Apply successivly BatchNormalization, ReLu nonlinearity, Convolution and Dropout (if dropout_p > 0)'''
 
     #l = tf.keras.layers.layers.BatchNormalization()(inputs)
-    groups = 32
-    if inputs.shape[3] % groups !=0:
-        #c = inputs.shape[3] // groups
-        groups = inputs.shape[3]//4
-
-    l = GroupNormalization(groups=groups)(inputs)
+    l = GroupNormalization(groups=16)(inputs)
     l = tf.keras.layers.Activation('relu')(l)
     l = tf.keras.layers.Conv2D(n_filters, filter_size, padding='same', kernel_initializer='he_uniform',kernel_regularizer=ws_reg)(l)
     if dropout_p != 0.0:
