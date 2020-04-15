@@ -14,7 +14,7 @@ unknown_code = 128
 
 def pre_trimap(alpha):
     trimap = np.copy(alpha)
-    k_size = int(np.random.uniform(4, 8))
+    k_size = 5
     trimap[np.where((ndimage.grey_dilation(alpha[:, :], size=(k_size, k_size)) - ndimage.grey_erosion(alpha[:, :],
                                                                                                       size=(k_size,
                                                                                                             k_size))) != 0)] = unknown_code
@@ -24,8 +24,8 @@ def pre_trimap(alpha):
 
 def generate_trimap(alpha):
     trimap = pre_trimap(alpha)
-    k_size = int(np.random.uniform(1, 10)) * 2 + 1
-    trimap = cv2.medianBlur(trimap, k_size)
+    k_size = int(np.random.uniform(1, 5)) * 2 + 1
+    trimap = cv2.GaussianBlur(trimap, k_size)
     trimap = trimap.astype(np.float32) / 255
     trimap = np.expand_dims(trimap,axis=2)
     return trimap
