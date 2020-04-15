@@ -138,8 +138,8 @@ def augumnted_data_fn(args, training):
             augmented = augmentation(**data)
             img, mask = augmented["image"], augmented["mask"]
             s = np.random.uniform(0.5, 1)
-            w0 = img.shape[1]
-            h0 = img.shape[0]
+            w0 = min(img.shape[1],args.resolution)
+            h0 = min(img.shape[0],args.resolution)
             w = int(s * w0)
             h = int(s * h0)
             x_shift = int(np.random.uniform(0, w0 - w))
