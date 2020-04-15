@@ -21,7 +21,7 @@ def FCDensNetMatting(
     inputs = [img, trimap]
     input = tf.keras.layers.concatenate([img, trimap])
     stack = tf.keras.layers.Conv2D(filters=n_filters_first_conv, kernel_size=3, padding='same',
-                                   kernel_initializer='he_uniform')(input)
+                                   kernel_initializer='he_uniform',kernel_regularizer=fc_layers.ws_reg)(input)
     n_filters = n_filters_first_conv
 
     skip_connection_list = []
@@ -54,7 +54,7 @@ def FCDensNetMatting(
             stack = tf.keras.layers.concatenate([stack, l])
         block_to_upsample = tf.keras.layers.concatenate(block_to_upsample)
 
-    l = tf.keras.layers.Conv2D(7, kernel_size=1, padding='same', kernel_initializer='he_uniform')(stack)
+    l = tf.keras.layers.Conv2D(7, kernel_size=1, padding='same', kernel_initializer='he_uniform',kernel_regularizer=fc_layers.ws_reg)(stack)
     alpha = tf.keras.activations.hard_sigmoid(l[:, :, :, 0:1])
     fg = tf.keras.activations.sigmoid(l[:, :, :, 1:4])
     bg = tf.keras.activations.sigmoid(l[:, :, :, 4:7])
