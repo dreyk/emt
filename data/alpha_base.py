@@ -25,7 +25,7 @@ def pre_trimap(alpha):
 def generate_trimap(alpha):
     trimap = pre_trimap(alpha)
     k_size = int(np.random.uniform(1, 5)) * 2 + 1
-    trimap = cv2.GaussianBlur(trimap, k_size)
+    trimap = cv2.GaussianBlur(trimap, k_size,25)
     trimap = trimap.astype(np.float32) / 255
     trimap = np.expand_dims(trimap,axis=2)
     return trimap
