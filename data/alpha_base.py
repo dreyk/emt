@@ -31,8 +31,8 @@ def generate_trimap(alpha):
     return trimap
 
 
-def random_choice(img,mask):
-    crop_size = random.choice([320,480,640])
+def random_choice(img,mask,resolution):
+    crop_size = random.choice([resolution,resolution+resolution//2,resolution*2])
     trimap = pre_trimap(mask)
     y_indices, x_indices = np.where(trimap == unknown_code)
     num_unknowns = len(y_indices)
@@ -45,7 +45,8 @@ def random_choice(img,mask):
         x1 = min(x0+crop_size,img.shape[1])
         y1 = min(y0 +crop_size, img.shape[0])
         if (x1-x0)>crop_size/2 and (y1-y0)>crop_size/2:
-            return img[y0:y1,x0:x1,:],mask[y0:y1,x0:x1]
+            img = img[y0:y1,x0:x1,:]
+            mask = mask[y0:y1,x0:x1]
     return img,mask
 
 def _coco_bg(args):
@@ -133,19 +134,13 @@ def augumnted_data_fn(args, training):
             mask = cv2.imread(i[1])
             if len(mask.shape) == 3:
                 mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-            img,mask = random_choice(img,mask)
+            img,mask = random_choice(img,mask,args.resolution)
             data = {"image": img, "mask": mask}
             augmented = augmentation(**data)
             img, mask = augmented["image"], augmented["mask"]
-            s = np.random.uniform(0.5, 1)
-            w0 = min(img.shape[1],args.resolution)
-            h0 = min(img.shape[0],args.resolution)
-            w = int(s * w0)
-            h = int(s * h0)
-            x_shift = int(np.random.uniform(0, w0 - w))
-            y_shift = int(np.random.uniform(0, h0 - h))
-            fg = _resize_and_put(img, x_shift, y_shift, w, h, args.resolution, args.resolution)
-            mask = _resize_and_put(mask, x_shift, y_shift, w, h, args.resolution, args.resolution)
+
+            fg = cv2.resize(img,args.resolution, args.resolution)
+            mask = cv2.resize(mask,args.resolution, args.resolution)
             name = random.choice(coco_images)
             bg = cv2.imread(name)
             bg = _crop_back(bg,args.resolution, args.resolution)
