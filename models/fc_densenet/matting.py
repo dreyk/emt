@@ -1,6 +1,16 @@
 import models.fc_densenet.layers as fc_layers
 import tensorflow as tf
 
+def fba_fusion(alpha, img, F, B):
+    F = ((alpha * img + (1 - alpha**2) * F - alpha * (1 - alpha) * B))
+    B = ((1 - alpha) * img + (2 * alpha - alpha**2) * B - alpha * (1 - alpha) * F)
+
+    F = tf.clip_by_value(F,0,1)
+    B = tf.clip_by_value(B,0,1)
+    la = 0.1
+    alpha = (alpha * la +tf.reduce_sum((img - B) * (F - B),1,True)) / (tf.reduce_sum((F - B) * (F - B),1,True) + la)
+    alpha = tf.clip_by_value(alpha,0,1)
+    return alpha, F, B
 
 def FCDensNetMatting(
         n_filters_first_conv=48,
@@ -56,7 +66,9 @@ def FCDensNetMatting(
 
     l = tf.keras.layers.Conv2D(7, kernel_size=1, padding='same', kernel_initializer='he_uniform',kernel_regularizer=fc_layers.ws_reg)(stack)
     alpha = tf.keras.activations.hard_sigmoid(l[:, :, :, 0:1])
+    alpha = tf.clip_by_value(alpha,0,1)
     fg = tf.keras.activations.sigmoid(l[:, :, :, 1:4])
     bg = tf.keras.activations.sigmoid(l[:, :, :, 4:7])
+    alpha, F, B = fba_fusion(alpha, img, fg, bg)
     model = tf.keras.Model(inputs=inputs, outputs=[alpha, fg, bg])
     return model

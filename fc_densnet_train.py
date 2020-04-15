@@ -72,7 +72,7 @@ def train(args):
                 fg = y_batch_train[:, :, :, 1:4]
                 bg = y_batch_train[:, :, :, 4:7]
                 alpha_l1 = l1(alpha,palpha)
-                alpha_g = l1(alpha_dx,palpha_dx)+l1(alpha_dy,palpha_dy)
+                #alpha_g = l1(alpha_dx,palpha_dx)+l1(alpha_dy,palpha_dy)
                 alpha_c = l1(img, fg * palpha + bg * (1 - palpha))
                 alpha_lap = laploss(alpha,palpha)
 
@@ -83,7 +83,7 @@ def train(args):
                 fb_c = l1(img,alpha*pfg+(1-alpha)*pbg)
                 fb_lap = laploss(fg,pfg)+laploss(bg,pbg)
 
-                loss_value = alpha_l1+alpha_g+alpha_c+alpha_lap+0.25*(fb_l1+fb_exl+fb_c+fb_lap)
+                loss_value = alpha_l1+alpha_c+alpha_lap+0.25*(fb_l1+fb_exl+fb_c+fb_lap)
 
 
                 if step % 50 == 0:
@@ -91,7 +91,7 @@ def train(args):
                     with file_writer.as_default():
                         tf.summary.scalar("Loss", loss_value, step=step)
                         tf.summary.scalar("Alpha/L1", alpha_l1, step=step)
-                        tf.summary.scalar("Alpha/G", alpha_g, step=step)
+                        #tf.summary.scalar("Alpha/G", alpha_g, step=step)
                         tf.summary.scalar("Alpha/C", alpha_c, step=step)
                         tf.summary.scalar("Alpha/Lap", alpha_lap, step=step)
                         tf.summary.scalar("FB/L1", fb_l1, step=step)
