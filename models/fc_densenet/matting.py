@@ -16,11 +16,12 @@ def FCDensNetMatting(
     else:
         raise ValueError
 
-    img = tf.keras.layers.Input(shape=(None,None,3),name='img')
+    img = tf.keras.layers.Input(shape=(None, None, 3), name='img')
     trimap = tf.keras.layers.Input(shape=(None, None, 1), name='trimap')
-    inputs = [img,trimap]
-    input = tf.keras.layers.concatenate([img,trimap])
-    stack = tf.keras.layers.Conv2D(filters=n_filters_first_conv, kernel_size=3, padding='same', kernel_initializer='he_uniform')(input)
+    inputs = [img, trimap]
+    input = tf.keras.layers.concatenate([img, trimap])
+    stack = tf.keras.layers.Conv2D(filters=n_filters_first_conv, kernel_size=3, padding='same',
+                                   kernel_initializer='he_uniform')(input)
     n_filters = n_filters_first_conv
 
     skip_connection_list = []
@@ -54,8 +55,8 @@ def FCDensNetMatting(
         block_to_upsample = tf.keras.layers.concatenate(block_to_upsample)
 
     l = tf.keras.layers.Conv2D(7, kernel_size=1, padding='same', kernel_initializer='he_uniform')(stack)
-    alpha = tf.keras.activations.hard_sigmoid(l[:,:,:,0:1])
-    fg = tf.keras.activations.hard_sigmoid(l[:,:,:,1:4])
-    bg = tf.keras.activations.hard_sigmoid(l[:, :, :, 4:7])
-    model = tf.keras.Model(inputs=inputs, outputs=[alpha,fg,bg])
+    alpha = tf.keras.activations.hard_sigmoid(l[:, :, :, 0:1])
+    fg = tf.keras.activations.sigmoid(l[:, :, :, 1:4])
+    bg = tf.keras.activations.sigmoid(l[:, :, :, 4:7])
+    model = tf.keras.Model(inputs=inputs, outputs=[alpha, fg, bg])
     return model

@@ -66,7 +66,7 @@ def train(args):
                 palpha = outputs[0]
                 palpha_dx, palpha_dy = tf.image.image_gradients(palpha)
                 pfg = outputs[1]
-                pbg = outputs[1]
+                pbg = outputs[2]
                 alpha = y_batch_train[:,:,:,0:1]
                 alpha_dx, alpha_dy = tf.image.image_gradients(alpha)
                 fg = y_batch_train[:, :, :, 1:4]
@@ -105,8 +105,8 @@ def train(args):
                         tf.summary.image("PFG", pfg, step=step, max_outputs=3)
                         tf.summary.image("Alpha", alpha, step=step, max_outputs=3)
                         tf.summary.image("Trimap", trimap, step=step, max_outputs=3)
-                        tf.summary.image("PAlpha", trimap, step=step, max_outputs=3)
-                        tf.summary.image("Res", img*alpha, step=step, max_outputs=3)
+                        tf.summary.image("PAlpha", palpha, step=step, max_outputs=3)
+                        tf.summary.image("Res", img*palpha, step=step, max_outputs=3)
 
             grads = tape.gradient(loss_value, model.trainable_weights)
             optimizer.apply_gradients(zip(grads, model.trainable_weights))
