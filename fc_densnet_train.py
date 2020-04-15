@@ -55,7 +55,7 @@ def train(args):
     model.summary()
 
     l1 = tf.keras.losses.MeanAbsoluteError()
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
     step = 0
     for e in range(args.num_epochs):
         for (x_batch_train, y_batch_train) in ds:
