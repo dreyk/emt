@@ -8,7 +8,7 @@ def fba_fusion(alpha, img, F, B):
     F = tf.clip_by_value(F,0,1)
     B = tf.clip_by_value(B,0,1)
     la = 0.1
-    alpha = (alpha * la +tf.reduce_sum((img - B) * (F - B),1,True)) / (tf.reduce_sum((F - B) * (F - B),1,True) + la)
+    alpha = (alpha * la +tf.reduce_sum((img - B) * (F - B),3,True)) / (tf.reduce_sum((F - B) * (F - B),3,True) + la)
     alpha = tf.clip_by_value(alpha,0,1)
     return alpha, F, B
 
@@ -69,6 +69,6 @@ def FCDensNetMatting(
     alpha = tf.clip_by_value(alpha,0,1)
     fg = tf.keras.activations.sigmoid(l[:, :, :, 1:4])
     bg = tf.keras.activations.sigmoid(l[:, :, :, 4:7])
-    alpha, F, B = fba_fusion(alpha, img, fg, bg)
+    alpha, fg, bg = fba_fusion(alpha, img, fg, bg)
     model = tf.keras.Model(inputs=inputs, outputs=[alpha, fg, bg])
     return model
