@@ -139,8 +139,8 @@ def augumnted_data_fn(args, training):
             augmented = augmentation(**data)
             img, mask = augmented["image"], augmented["mask"]
 
-            fg = cv2.resize(img,args.resolution, args.resolution)
-            mask = cv2.resize(mask,args.resolution, args.resolution)
+            fg = cv2.resize(img,(args.resolution, args.resolution))
+            mask = cv2.resize(mask,(args.resolution, args.resolution))
             name = random.choice(coco_images)
             bg = cv2.imread(name)
             bg = _crop_back(bg,args.resolution, args.resolution)
