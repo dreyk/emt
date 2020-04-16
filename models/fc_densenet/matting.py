@@ -26,12 +26,14 @@ def FCDensNetMatting(
     else:
         raise ValueError
 
-    img = tf.keras.layers.Input(shape=(None, None, 3), name='img')
-    trimap = tf.keras.layers.Input(shape=(None, None, 1), name='trimap')
+    img = tf.keras.layers.Input(shape=(320, 320, 3), name='img')
+    trimap = tf.keras.layers.Input(shape=(320, 320, 1), name='trimap')
     inputs = [img, trimap]
     input = tf.keras.layers.concatenate([img, trimap])
+    print('n_filters_first_conv={}'.format(n_filters_first_conv))
     stack = tf.keras.layers.Conv2D(filters=n_filters_first_conv, kernel_size=3, padding='same',
                                    kernel_initializer='he_uniform',kernel_regularizer=fc_layers.ws_reg)(input)
+    print('stack={}'.format(stack.shape))
     n_filters = n_filters_first_conv
 
     skip_connection_list = []
