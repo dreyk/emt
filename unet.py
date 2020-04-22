@@ -15,7 +15,7 @@ def train(args):
     model = unet.unet((args.resolution,args.resolution,3),16,4,0,2,1,args.batch_size==1)
     model.summary()
     l1 = tf.keras.losses.MeanAbsoluteError()
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
     step = 0
     for e in range(args.num_epochs):
         for (img, y_batch_train) in ds:
