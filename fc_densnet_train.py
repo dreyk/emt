@@ -1,6 +1,7 @@
 import tensorflow as tf
 import data.alpha_base as data
 import models.fc_densenet.matting as fc_densenet
+import models.resnet.model as resnet_mat
 import logging
 import os
 import argparse
@@ -47,6 +48,14 @@ def laploss(t_img1, t_img2, max_levels=3):
 
 
 def train(args):
+    logdir = args.checkpoint_dir
+    os.makedirs(logdir)
+    file_writer = tf.summary.create_file_writer(logdir)
+    ds = data.augumnted_data_fn(args, True)
+    model = resnet_mat.Matting()
+    model.summary()
+
+def train1(args):
     logdir = args.checkpoint_dir
     os.makedirs(logdir)
     file_writer = tf.summary.create_file_writer(logdir)

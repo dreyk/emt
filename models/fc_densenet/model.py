@@ -1,4 +1,4 @@
-import models.fc_densenet.layers as fc_layers
+import models.layers.layers as fc_layers
 import tensorflow as tf
 
 
