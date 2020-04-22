@@ -67,7 +67,7 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
                 filters = filters // growth_scale
 
     conv = tf.keras.layers.Conv2D(filters, 7, padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(conv)
-    n = norm(first_chan//2)(conv)
+    n = norm(first_chan)(conv)
     r = tf.keras.layers.Activation(tf.keras.activations.relu)(n)
     conv_m = tf.keras.layers.Conv2D(out_chans, 1, padding='same', kernel_initializer='he_normal',
                                    kernel_regularizer=layers.ws_reg)(r)
