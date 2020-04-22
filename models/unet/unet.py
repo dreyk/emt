@@ -60,10 +60,13 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
                                    kernel_regularizer=layers.ws_reg)(r)
     r = tf.keras.layers.Activation(tf.keras.activations.relu)(conv)
     alpha = tf.clip_by_value(r[:, :, :, 0:1], 0, 1)
-    fg = tf.keras.activations.sigmoid(r[:, :, :, 1:4])
-    bg = tf.keras.activations.sigmoid(r[:, :, :, 4:7])
-    alpha, fg, bg = fba_fusion(alpha, inputs, fg, bg)
-    model = tf.keras.Model(inputs=inputs, outputs=[alpha,fg,bg])
+    if out_chans==7:
+        fg = tf.keras.activations.sigmoid(r[:, :, :, 1:4])
+        bg = tf.keras.activations.sigmoid(r[:, :, :, 4:7])
+        alpha, fg, bg = fba_fusion(alpha, inputs, fg, bg)
+        model = tf.keras.Model(inputs=inputs, outputs=[alpha,fg,bg])
+    else:
+        model = tf.keras.Model(inputs=inputs, outputs=alpha)
     return model
 
 

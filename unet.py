@@ -12,7 +12,7 @@ def train(args):
     os.makedirs(logdir)
     file_writer = tf.summary.create_file_writer(logdir)
     ds = data.data_fn(args, True)
-    model = unet.unet((args.resolution,args.resolution,3),16,4,0,2,7)
+    model = unet.unet((args.resolution,args.resolution,3),16,4,0,2,1)
     model.summary()
     l1 = tf.keras.losses.MeanAbsoluteError()
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)
@@ -21,18 +21,18 @@ def train(args):
         for (img, y_batch_train) in ds:
             with tf.GradientTape() as tape:
                 outputs = model(img, training=True)  # Logits for this minibatch
-                palpha = outputs[0]
-                pfg = outputs[1]
-                pbg = outputs[2]
+                palpha = outputs
+                #pfg = outputs[1]
+                #pbg = outputs[2]
                 alpha = y_batch_train[:, :, :, 0:1]
-                fg = y_batch_train[:, :, :, 1:4]
-                bg = y_batch_train[:, :, :, 4:7]
                 alpha_l1 = l1(alpha, palpha)
+                fg = alpha*img
+                bg = img*(1-alpha)
                 alpha_c = l1(img, fg * palpha + bg * (1 - palpha))
-                fb_l1 = l1(fg, pfg) + l1(bg, pbg)
-                fb_c = l1(img, alpha * pfg + (1 - alpha) * pbg)
+                #fb_l1 = l1(fg, pfg) + l1(bg, pbg)
+                #fb_c = l1(img, alpha * pfg + (1 - alpha) * pbg)
 
-                loss_value = alpha_l1 + alpha_c  + 0.25 * (fb_l1 + fb_c)
+                loss_value = alpha_l1 + alpha_c
 
                 if step % 50 == 0:
                     logging.info("Step {}: Loss={}".format(step, loss_value))
@@ -41,12 +41,12 @@ def train(args):
                         tf.summary.scalar("Loss", loss_value, step=step)
                         tf.summary.scalar("Alpha/L1", alpha_l1, step=step)
                         tf.summary.scalar("Alpha/C", alpha_c, step=step)
-                        tf.summary.scalar("FB/L1", fb_l1, step=step)
+                        #tf.summary.scalar("FB/L1", fb_l1, step=step)
                         tf.summary.image("Src", img, step=step, max_outputs=3)
                         tf.summary.image("BG", bg, step=step, max_outputs=3)
                         tf.summary.image("FG", fg, step=step, max_outputs=3)
-                        tf.summary.image("PBG", pbg, step=step, max_outputs=3)
-                        tf.summary.image("PFG", pfg, step=step, max_outputs=3)
+                        #tf.summary.image("PBG", pbg, step=step, max_outputs=3)
+                        #tf.summary.image("PFG", pfg, step=step, max_outputs=3)
                         tf.summary.image("Alpha", alpha, step=step, max_outputs=3)
                         tf.summary.image("PAlpha", palpha, step=step, max_outputs=3)
                         tf.summary.image("Res", img * palpha, step=step, max_outputs=3)

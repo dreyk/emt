@@ -16,7 +16,7 @@ def data_fn(args, training):
     def _generator():
 
         for i in files:
-            img = cv2.imread(i[0])
+            img = cv2.imread(i[0])[:,:,::-1]
             mask = cv2.imread(i[1])
             img = cv2.resize(img,(args.resolution,args.resolution))
             mask = cv2.resize(mask, (args.resolution, args.resolution))
@@ -26,13 +26,11 @@ def data_fn(args, training):
             img = img.astype(np.float32)/255
             mask = mask.astype(np.float32)/255
             mask = np.expand_dims(mask,axis=2)
-            bg = img*(1-mask)
-            fg = img*mask
-            yield img, np.concatenate([mask, fg, bg], axis=2)
+            yield img, mask
 
     ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
                                         (tf.TensorShape([args.resolution, args.resolution, 3]),
-                                         tf.TensorShape([args.resolution, args.resolution, 7])))
+                                         tf.TensorShape([args.resolution, args.resolution, 1])))
     if training:
         ds = ds.shuffle(args.batch_size * 3, reshuffle_each_iteration=True)
 
