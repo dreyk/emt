@@ -43,7 +43,6 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
 
 
     for i in range(pools):
-        print(i)
         up = tf.keras.layers.Conv2DTranspose(filters,3,strides=2,padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(conv)
         concat = tf.keras.layers.concatenate([connections[i], up])
         conv = block(concat,filters,first_chan,False)
