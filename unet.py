@@ -12,7 +12,7 @@ def train(args):
     os.makedirs(logdir)
     file_writer = tf.summary.create_file_writer(logdir)
     ds = data.data_fn(args, True)
-    model = unet.unet((args.resolution,args.resolution,3),16,4,0,2,1)
+    model = unet.unet((args.resolution,args.resolution,3),16,4,0,2,1,args.batch_size==1)
     model.summary()
     l1 = tf.keras.losses.MeanAbsoluteError()
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.00001)

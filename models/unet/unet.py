@@ -1,12 +1,13 @@
 import models.layers.layers as layers
 import tensorflow as tf
 
-def block(input,filters,norm_groups=16,pooling=True):
+
+def block(input,filters,norm,pooling=True):
     conv1 = tf.keras.layers.Conv2D(filters, 3,padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(input)
-    n1 = layers.GroupNormalization(groups=norm_groups)(conv1)
+    n1 = norm(conv1)
     r1 = tf.keras.layers.Activation(tf.keras.activations.relu)(n1)
     conv2 = tf.keras.layers.Conv2D(filters, 3, padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(r1)
-    n2 = layers.GroupNormalization(groups=norm_groups)(conv2)
+    n2 = norm(conv2)
     r3 = tf.keras.layers.Activation(tf.keras.activations.relu)(n2)
     if pooling:
         pool = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(r3)
@@ -24,13 +25,22 @@ def fba_fusion(alpha, img, F, B):
     alpha = tf.clip_by_value(alpha,0,1)
     return alpha, F, B
 
-def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_scale=2,out_chans=1):
+def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_scale=2,out_chans=1,use_group_norm=True):
+    if use_group_norm:
+        def _norm(norm_groups):
+            return layers.GroupNormalization(groups=norm_groups)
+        norm = _norm
+    else:
+        def _norm(norm_groups):
+            return tf.keras.layers.BatchNormalization()
+
+        norm = _norm
     inputs = tf.keras.layers.Input(input_shape)
     pool = inputs
     filters = first_chan
     connections = []
     for i in range(pools):
-        conv,pool = block(pool,filters,first_chan//2,True)
+        conv,pool = block(pool,filters,norm(first_chan//2),True)
         connections.append(conv)
         if growth_add>0:
             filters += growth_add
@@ -39,13 +49,13 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
 
     connections.reverse()
 
-    conv = block(pool,filters,first_chan,False)
+    conv = block(pool,filters,norm(first_chan),False)
 
 
     for i in range(pools):
         up = tf.keras.layers.Conv2DTranspose(filters,3,strides=2,padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(conv)
         concat = tf.keras.layers.concatenate([connections[i], up])
-        conv = block(concat,filters,first_chan,False)
+        conv = block(concat,filters,norm(first_chan),False)
 
         if growth_add > 0:
             filters -= growth_add
@@ -53,7 +63,7 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
             filters = filters // growth_scale
 
     conv = tf.keras.layers.Conv2D(first_chan, 3, padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(conv)
-    n = layers.GroupNormalization(groups=first_chan//2)(conv)
+    n = norm(first_chan//2)(conv)
     r = tf.keras.layers.Activation(tf.keras.activations.relu)(n)
     conv = tf.keras.layers.Conv2D(out_chans, 3, padding='same', kernel_initializer='he_normal',
                                    kernel_regularizer=layers.ws_reg)(r)
