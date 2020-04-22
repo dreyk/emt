@@ -36,9 +36,12 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
 
         norm = _norm
     inputs = tf.keras.layers.Input(input_shape)
-    pool = inputs
     filters = first_chan
     connections = []
+    pool = tf.keras.layers.Conv2D(first_chan, 7, padding='same', kernel_initializer='he_normal',
+                                  kernel_regularizer=layers.ws_reg)(inputs)
+    pool = norm(first_chan // 2)(pool)
+    pool = tf.keras.layers.Activation(tf.keras.activations.relu)(pool)
     for i in range(pools):
         conv,pool = block(pool,filters,norm(first_chan//2),True)
         connections.append(conv)
@@ -57,18 +60,20 @@ def unet(input_shape=(None, None, 3),first_chan=16,pools=4,growth_add=0,growth_s
         concat = tf.keras.layers.concatenate([connections[i], up])
         conv = block(concat,filters,norm(first_chan),False)
 
-        if growth_add > 0:
-            filters -= growth_add
-        else:
-            filters = filters // growth_scale
+        if i<(pools-1):
+            if growth_add > 0:
+                filters -= growth_add
+            else:
+                filters = filters // growth_scale
 
-    conv = tf.keras.layers.Conv2D(first_chan, 3, padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(conv)
+    conv = tf.keras.layers.Conv2D(filters, 7, padding='same', kernel_initializer='he_normal',kernel_regularizer=layers.ws_reg)(conv)
     n = norm(first_chan//2)(conv)
     r = tf.keras.layers.Activation(tf.keras.activations.relu)(n)
-    conv = tf.keras.layers.Conv2D(out_chans, 3, padding='same', kernel_initializer='he_normal',
+    conv_m = tf.keras.layers.Conv2D(out_chans, 1, padding='same', kernel_initializer='he_normal',
                                    kernel_regularizer=layers.ws_reg)(r)
-    r = tf.keras.layers.Activation(tf.keras.activations.relu)(conv)
-    alpha = tf.clip_by_value(r[:, :, :, 0:1], 0, 1)
+    conv_final = tf.keras.layers.Conv2D(out_chans, 1, padding='same', kernel_initializer='he_normal',
+                                    kernel_regularizer=layers.ws_reg)(conv_m)
+    alpha = tf.clip_by_value(conv_final[:, :, :, 0:1], 0, 1)
     if out_chans==7:
         fg = tf.keras.activations.sigmoid(r[:, :, :, 1:4])
         bg = tf.keras.activations.sigmoid(r[:, :, :, 4:7])
