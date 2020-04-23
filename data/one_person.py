@@ -10,7 +10,7 @@ def _strong_aug(p=0.5):
     import albumentations
     return albumentations.Compose([
         albumentations.HorizontalFlip(p=0.5),
-        albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=30, p=0.5),
+        albumentations.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=30, p=0.5),
         albumentations.OneOf([
             albumentations.OpticalDistortion(p=0.5),
             albumentations.GridDistortion(p=0.5),
