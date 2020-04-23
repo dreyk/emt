@@ -30,7 +30,7 @@ def data_fn(args, training):
                 mask = mask.astype(np.float32)/255
                 mask = np.expand_dims(mask,axis=2)
                 img = img*mask+bg*(1-mask)
-                yield img, mask
+                yield img/255, mask
 
     ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
                                         (tf.TensorShape([args.resolution, args.resolution, 3]),
