@@ -10,12 +10,12 @@ def _strong_aug(p=0.5):
     import albumentations
     return albumentations.Compose([
         albumentations.HorizontalFlip(p=0.5),
-        albumentations.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=30, p=0.5),
+        albumentations.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=0, p=0.5,border_mode=cv2.BORDER_CONSTANT),
         albumentations.OneOf([
-            albumentations.OpticalDistortion(p=0.5),
-            albumentations.GridDistortion(p=0.5),
+            albumentations.OpticalDistortion(p=0.5,border_mode=cv2.BORDER_CONSTANT),
+            albumentations.GridDistortion(p=0.5,border_mode=cv2.BORDER_CONSTANT),
             albumentations.IAAPiecewiseAffine(p=0.5),
-            albumentations.ElasticTransform(p=0.5),
+            albumentations.ElasticTransform(p=0.5,border_mode=cv2.BORDER_CONSTANT),
         ], p=0.5),
         albumentations.OneOf([
             albumentations.CLAHE(clip_limit=2),
