@@ -7,6 +7,8 @@ import os
 import argparse
 
 
+
+
 def train(args):
     logdir = args.checkpoint_dir
     os.makedirs(logdir)
@@ -30,7 +32,7 @@ def train(args):
 
                 loss_value = alpha_l1
 
-                if step % 50 == 0:
+                if step % 10 == 0:
                     logging.info("Step {}: Loss={}".format(step, loss_value))
                     model.save(os.path.join(logdir, 'model'), save_format='tf')
                     with file_writer.as_default():

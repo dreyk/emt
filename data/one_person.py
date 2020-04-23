@@ -6,6 +6,28 @@ import glob
 import data.coco as coco
 import logging
 
+def _strong_aug(p=0.5):
+    import albumentations
+    return albumentations.Compose([
+        albumentations.HorizontalFlip(p=0.5),
+        albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=30, p=0.5),
+        albumentations.OneOf([
+            albumentations.OpticalDistortion(p=0.5),
+            albumentations.GridDistortion(p=0.5),
+            albumentations.IAAPiecewiseAffine(p=0.5),
+            albumentations.ElasticTransform(p=0.5),
+        ], p=0.5),
+        albumentations.OneOf([
+            albumentations.CLAHE(clip_limit=2),
+            albumentations.IAASharpen(),
+            albumentations.IAAEmboss(),
+        ], p=0.5),
+        albumentations.OneOf([
+            albumentations.RandomBrightnessContrast(p=0.5),
+        ], p=0.4),
+        albumentations.HueSaturationValue(p=0.5),
+    ], p=p)
+
 def data_fn(args, training):
     files = glob.glob(args.data_set + '/masks/*.*')
     for i in range(len(files)):
@@ -15,6 +37,7 @@ def data_fn(args, training):
         files[i] = (img, mask)
     logging.info('Number of training files: {}'.format(len(files)))
     coco_bg = coco.CocoBG(args.coco)
+    augmentation = _strong_aug(p=1)
     def _generator():
         for _ in range(args.epoch_len):
             for i in files:
@@ -24,6 +47,9 @@ def data_fn(args, training):
                 mask = cv2.resize(mask, (args.resolution, args.resolution))
                 if len(mask.shape) == 3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                data = {"image": img, "mask": mask}
+                augmented = augmentation(**data)
+                img, mask = augmented["image"], augmented["mask"]
                 bg = coco_bg.get_random(args.resolution,args.resolution)
                 bg = bg.astype(np.float32)
                 img = img.astype(np.float32)
