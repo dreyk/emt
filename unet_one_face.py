@@ -33,8 +33,9 @@ def train(args):
                     logging.info("Step {}: Loss={}".format(step, loss_value))
                     model.save(os.path.join(logdir, 'model'), save_format='tf')
                     with file_writer.as_default():
-                        tf.summary.trace_export('grpah',step)
-
+                        if step==0:
+                            tf.summary.trace_export('grpah',0)
+                            tf.summary.trace_off()
                         tf.summary.scalar("Loss", loss_value, step=step)
                         tf.summary.scalar("Alpha/L1", alpha_l1, step=step)
                         tf.summary.image("Src", img, step=step, max_outputs=3)
