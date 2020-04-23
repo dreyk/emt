@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 import models.unet.unet as unet
-import data.alpha as data
+import data.one_person as data
 import logging
 import os
 import argparse
@@ -12,12 +12,13 @@ def train(args):
     os.makedirs(logdir)
     file_writer = tf.summary.create_file_writer(logdir)
     ds = data.data_fn(args, True)
-    model = unet.unet((args.resolution, args.resolution, 3), first_chan=16, pools=4, growth_add=0, growth_scale=2,
+    model = unet.unet((args.resolution, args.resolution, 3), first_chan=32, pools=4, growth_add=0, growth_scale=2,
                       out_chans=1, use_group_norm=args.batch_size == 1)
     model.summary()
     l1 = tf.keras.losses.MeanAbsoluteError()
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
     step = 0
+    tf.summary.trace_on(graph=True, profiler=False)
     for e in range(args.num_epochs):
         for (img, y_batch_train) in ds:
             with tf.GradientTape() as tape:
@@ -32,6 +33,9 @@ def train(args):
                     logging.info("Step {}: Loss={}".format(step, loss_value))
                     model.save(os.path.join(logdir, 'model'), save_format='tf')
                     with file_writer.as_default():
+                        if step==0:
+                            tf.summary.trace_export('grpah',0)
+                            tf.summary.trace_off()
                         tf.summary.scalar("Loss", loss_value, step=step)
                         tf.summary.scalar("Alpha/L1", alpha_l1, step=step)
                         tf.summary.image("Src", img, step=step, max_outputs=3)
@@ -61,6 +65,8 @@ def create_arg_parser():
     checkpoint_dir = args.checkpoint_dir
     logging.info('Checkpoint %s', checkpoint_dir)
     parser.add_argument('--batch_size', default=1, type=int, help='Mini batch size')
+    parser.add_argument('--coco', default='test', type=str, help='Coco path')
+    parser.add_argument('--epoch_len', default=10, type=int, help='Repeat at least')
     parser.add_argument('--num_epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--resolution', default=160, type=int, help='Resolution of images')
     parser.add_argument('--data_set', type=str, required=True,

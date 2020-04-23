@@ -36,13 +36,16 @@ def load_model(gpu, path):
     return build_model(gpu, args)
 
 
-def pred(model, image, pre_mask):
-    pre_mask = generate_trimap(pre_mask)
+def pred(model, image, mask, do_trimap=True):
+    if do_trimap:
+        pre_mask = generate_trimap(mask)
+    else:
+        pre_mask = mask
     trimap = np.zeros((pre_mask.shape[0], pre_mask.shape[1], 2))
     trimap[pre_mask == 255, 1] = 1
     trimap[pre_mask == 0, 0] = 1
     _, _, alpha = _pred(image, trimap, model)
-    return alpha
+    return alpha, pre_mask
 
 
 def _pred(image_np: np.ndarray, trimap_np: np.ndarray, model) -> np.ndarray:
