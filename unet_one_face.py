@@ -20,6 +20,7 @@ def train(args):
     step = 0
     tf.summary.trace_on(graph=True, profiler=False)
     for e in range(args.num_epochs):
+        logging.info('epoch %d',e)
         for (img, y_batch_train) in ds:
             with tf.GradientTape() as tape:
                 outputs = model(img, training=True)  # Logits for this minibatch
