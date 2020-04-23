@@ -14,7 +14,7 @@ def train(args):
     os.makedirs(logdir)
     file_writer = tf.summary.create_file_writer(logdir)
     ds = data.data_fn(args, True)
-    model = unet.unet((args.resolution, args.resolution, 3), first_chan=32, pools=4, growth_add=0, growth_scale=2,
+    model = unet.unet((args.resolution, args.resolution, 3), first_chan=64, pools=4, growth_add=0, growth_scale=2,
                       out_chans=1, use_group_norm=args.batch_size == 1)
     model.summary()
     l1 = tf.keras.losses.MeanAbsoluteError()
