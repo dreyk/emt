@@ -66,7 +66,7 @@ def unet(input_shape=(None, None, 3), first_chan=16, pools=4, growth_add=0, grow
     conv = tf.keras.layers.Conv2D(filters, 7, padding='same', kernel_initializer='he_normal')(conv)
     conv = tf.keras.layers.Conv2D(out_chans, 1, padding='same', kernel_initializer='he_normal')(conv)
     conv_final = tf.keras.layers.Conv2D(out_chans, 1, padding='same', kernel_initializer='he_normal')(conv)
-    alpha = tf.keras.activations.sigmoid(conv_final[:, :, :, 0:1], 0, 1)
+    alpha = tf.keras.activations.sigmoid(conv_final[:, :, :, 0:1])
     if out_chans == 7:
         fg = tf.keras.activations.sigmoid(conv_final[:, :, :, 1:4])
         bg = tf.keras.activations.sigmoid(conv_final[:, :, :, 4:7])
