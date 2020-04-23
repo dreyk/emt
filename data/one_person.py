@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import glob
 import data.coco as coco
-
+import logging
 
 def data_fn(args, training):
     files = glob.glob(args.data_set + '/masks/*.*')
@@ -13,6 +13,7 @@ def data_fn(args, training):
         img = os.path.basename(mask)
         img = args.data_set + '/images/' + img
         files[i] = (img, mask)
+    logging.info('Number of training files: {}'.format(len(files)))
     coco_bg = coco.CocoBG(args.coco)
     def _generator():
         for _ in range(args.epoch_len):
